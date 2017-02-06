@@ -26,7 +26,7 @@
         baseUri: 'https://api.darksky.net/forecast/',
         baseExclude: '&exclude=',
         acceptedUnits: ['auto', 'ca', 'uk2', 'us', 'si'],
-        acceptedLanguage: [ 
+        acceptedLanguage: [
           'ar', 'az', 'be', 'bs', 'cs', 'de', 'el', 'en', 'es', 'fr', 'hr', 'hu', 'id', 'it', 'is', 'kw', 'nb', 'nl', 'pl', 'pt', 'ru', 'sk', 'sr', 'sv', 'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw'
         ]
       },
@@ -69,7 +69,7 @@
     /**
      * Service definition
      */
-    this.$get = ['$http', '$q', function($http, $q) {
+    this.$get = ['$http', '$q','$sce', function($http, $q, $sce) {
       var service = {
         getCurrent: getCurrent,
         getForecast: getForecastDaily,
@@ -93,7 +93,7 @@
        * @param {number} longitude position
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with current weather data object
        */
       function getCurrent(latitude, longitude, options) {
@@ -106,7 +106,7 @@
        * @param {number} longitude positition
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with daily weather data object
        */
       function getForecastDaily(latitude, longitude, options) {
@@ -119,7 +119,7 @@
        * @param {number} longitude positition
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with hourly weather data object
        */
       function getForecastHourly(latitude, longitude, options) {
@@ -132,7 +132,7 @@
        * @param {number} longitude positition
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with minutely weather data object
        */
       function getForecastMinutely(latitude, longitude, options) {
@@ -145,7 +145,7 @@
        * @param {number} longitude positition
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with alerts weather data object
        */
       function getAlerts(latitude, longitude, options) {
@@ -158,7 +158,7 @@
        * @param {number} longitude positition
        * @param {object} [options] - additional query options
        * ... {unix timestamp} options.time - send timestamp for timemachine requests
-       * ... {boolean} options.extend - pass true for extended forecast 
+       * ... {boolean} options.extend - pass true for extended forecast
        * @returns {promise} - resolves with flags weather data object
        */
       function getFlags(latitude, longitude, options) {
@@ -171,7 +171,7 @@
        */
       function getUnits() {
         var unitsObject,
-          // per API defualt assume 'us' if omitted 
+          // per API defualt assume 'us' if omitted
           unitId = 'us';
 
         // determine unit id
@@ -290,20 +290,20 @@
        */
       function fetch(latitude, longitude, query, time) {
         var time = time ? ', ' + time : '',
-          url = [config.baseUri, apiKey, '/', latitude, ',', longitude, time, '?units=', units, '&lang=', language, query, '&callback=JSON_CALLBACK'].join('');
+            url = [config.baseUri, apiKey, '/', latitude, ',', longitude, time, '?units=', units, '&lang=', language, query].join('');
         return $http
-          .jsonp(url)
-          .then(function(results) {
-            // check response code
-            if (parseInt(results.status) === 200) {
-              return results.data;
-            } else {
-              return $q.reject(results);
-            }
-          })
-          .catch(function(data, status, headers, config) {
-            return $q.reject(status);
-          });
+            .jsonp($sce.trustAsResourceUrl(url))
+            .then(function(results) {
+              // check response code
+              if (parseInt(results.status) === 200) {
+                return results.data;
+              } else {
+                return $q.reject(results);
+              }
+            })
+            .catch(function(data, status, headers, config) {
+              return $q.reject(data);
+            });
       }
 
       /**
@@ -348,7 +348,7 @@
         };
       }
 
-      /** 
+      /**
        * Return ca response units
        * @returns {object} units
        */
